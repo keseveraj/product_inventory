@@ -57,4 +57,48 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product Have Been Added Successfully');
 
     }
+
+    public function edit($id) {
+        $product = Product::findOrFail($id);
+        return view('edit', ['product' => $product]);
+    }
+
+    public function update(Request $request, Product $product){
+        $request->validate([
+            'name' => 'required'
+        ]);
+
+        $file_name = $request->hidden_product_image;
+
+        if ($request->image != '') {
+            $file_name = time() . '.' . request()->image->getClientOriginalExtension();
+            request()->image->move(public_path('image'), $file_name);
+        }
+
+        $product = Product::find($request->hidden_id);
+
+        
+        $product ->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'category' => $request->category,
+            'quantity' => $request->quantity,
+            'price' => $request->price,
+            'image' => $file_name
+        ]);
+
+        return redirect()->route('products.index')->with('success', 'Product Updated');
+    }
+
+    public function destroy($id){
+        $product = Product::findOrFail($id);
+        $image_path = public_path()."/image/";
+        $image = $image_path. $product->image;
+        if (file_exists($image)) {
+            @unlink($image);
+        }
+        $product->delete();
+        return redirect('products')->with('success', 'Product Deleted !!!');
+
+    }
 }
